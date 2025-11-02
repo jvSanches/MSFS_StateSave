@@ -43,6 +43,7 @@ def stateSave(file_path):
             vr.get(get_command)
             sleep(0.1)
             value = vr.get(get_command) 
+            print(type(value))
             string = f'value=[{value}] ' + i + '\r\n'
         else:
             string = i + '\r\n'
@@ -52,6 +53,7 @@ def stateSave(file_path):
 
     f.close()
     print("Done")
+    input()
     sm.exit()
 
 def stateLoad(file_path):
@@ -248,3 +250,4 @@ else:
     print("Incorrect File")
 
 sleep(1)
+# input("...")

@@ -43,11 +43,12 @@ for i in weights:
 print(f'ZFW: {zfw:.1f} | CG: {cg:.1f} ')
 '''
 
-# var = "(A:GPS DRIVES NAV1, Bool)";
+var = "(L:bksq_AltitudePreselect_1, Feet)"
 
-# vr.get(var)
-# sleep(0.1) 
-# print(vr.get(var))
+vr.get(var)
+sleep(0.1) 
+print(vr.get(var))
+
 # # vr.set("0 1 3 4 4 (A:TRANSPONDER STATE:1, Number) case (>A:TRANSPONDER STATE:1, Number)")
 # for i in range(50,-5,-5):
 #     print(i)
@@ -58,12 +59,12 @@ sleep(1)
 # sleep(1)
 # a = horner_scheme_bcd32(124850000)
 # print(a)
-ae.find("PAUSE_OFF")()
+# ae.find("KEY_PARKING_BRAKES")()
 # ae.find("COM2_RADIO_SET")(9029)
 # ae.find("COM_RADIO_SET")(9029)
 # ae.find("COM2_RADIO_SET")(9029)
-# vr.set("100 (>A:AUTOPILOT HEADING LOCK DIR, Degree)")
-# vr.set("(>K:TOGGLE_GPS_DRIVES_NAV1")
+# vr.set("2200 (>L:bksq_AltitudePreselect_1, Feet)")
+# vr.set("3 1013 16 * (>K:2:KOHLSMAN_SET)")
 
-sleep(0.1)
+# sleep(0.1)
 # Event(b'MobiFlight.TRANSPONDER_Push_OFF', sm)()
