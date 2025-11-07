@@ -1,0 +1,71 @@
+Project: MSFS_StateSave (Microsoft Flight Simulator state saving)
+
+Primary goal
+- Provide a reproducible way to read and restore aircraft state via MobiFlight expressions and SimConnect events, using plain-text .cfg files authored by humans or LLMs.
+
+Key components
+- prototype/panelStates.py: main app. Reads .cfg, saves to .sav, and restores states.
+- Starship.cfg: example configuration for Black Square Starship.
+- starship_tables_plain_text.txt: extracted variable/event reference from product manual.
+
+How panelStates.py works (high level)
+- Save: For each non-comment line, if a value_get=[...] token exists, it queries the sim and writes a .sav line as: value=[<number>] <original line>.
+- Load: For each non-comment line in a .sav or .cfg, it parses tokens and performs one of:
+  - Direct set via value_set=[...]
+  - Toggle via value_toggle=[...]
+  - Increment/decrement via value_inc=[...]/value_dec=[...] or corresponding *_event variants
+  - Event with parameter via value_set_event=[EVENT_NAME]
+- Comparison: When both value_get and a setter exist, it compares current sim value to the saved/target value and only acts if different.
+
+Authoring .cfg files
+- File is line-oriented; each line is one item. Comments start with #.
+- Recognized tokens on a line (any order; space-separated):
+  - value_get=[<MF expression>]    // query current value
+  - value_set=[<MF expression>]    // write value or action; supports placeholder
+  - value_toggle=[<MF expression>] // toggle using expression
+  - value_inc=[<MF expression>]    // step up using expression repeatedly
+  - value_dec=[<MF expression>]    // step down using expression repeatedly
+  - value_inc_event=[EVENT]        // step up by calling SimConnect event
+  - value_dec_event=[EVENT]        // step down by calling SimConnect event
+  - value_set_event=[EVENT]        // call SimConnect event with integer parameter
+- Placeholder: Use $ inside value_set to inject the target value (saved or literal). Example: value_set=[$ (>L:var_Name, Number)]
+- Enumerations: value_set may provide multiple options separated by ;. The loader indexes by int(value). Example:
+  value_get=[(L:Mode, Number)] value_set=[0 (>K:FOO);1 (>K:BAR);2 (>K:BAZ)]
+- Types and units: In MobiFlight expressions, specify unit (Bool, Number, Feet, Degree, etc.) so read/write values match exactly.
+
+When to use each pattern
+- Simple boolean or numeric L:Vars: value_get + value_set with $ placeholder.
+- Events that directly take a value: value_set_event=[EVENT] with target value (passed as int).
+- Knobs and indexed states without direct set: use value_inc/value_dec or *_event forms; the loader loops until the read value equals the target.
+- Pure actions unrelated to a read value (e.g., always flip a master battery at startup): single value_set line without value_get.
+
+Gotchas and conventions
+- Floating point equality: Loader compares equality directly. Prefer discrete values or ensure transformations produce exact values.
+- Toggle events: event_toggle is parsed but not reliably acted upon in loader; prefer *_event or value_toggle instead.
+- Timing: The loader pauses ~0.1s between actions; avoid extremely long chains on a single line.
+- Complex sequences: You may chain multiple MF operations in one value_set expression (as seen in Starship.cfg bus/circuit templates).
+
+Examples (from this repo)
+- Direct L:Var boolean
+  value_get=[(L:var_SeatBeltLights, Bool)] value_set=[$ (>L:var_SeatBeltLights, Bool)]
+- K: event with side index and parameter injection
+  value_get=[(A:LIGHT LANDING:1, Bool)] value_set=[1 $ (>K:2:LANDING_LIGHTS_SET)]
+- Event with parameter
+  value_get=[(A:COM ACTIVE FREQUENCY:1, Frequency BCD16)] value_set_event=[COM_RADIO_SET]
+- Increment/decrement using events
+  value_get=[(A:FLAPS HANDLE INDEX:1, Number)] value_inc_event=[FLAPS_INCR] value_dec_event=[FLAPS_DECR]
+
+How to run
+- Save state from a .cfg: python prototype/panelStates.py Starship.cfg
+- Load state from a .sav: python prototype/panelStates.py path\to\save.sav
+
+LLM guidance
+- Prefer value_get + value_set pairs for deterministic variables, matching units.
+- Use $ placeholder to propagate saved values into set expressions.
+- For enumerations, provide semicolon-separated value_set options and ensure read values are integers.
+- For knobs/steppers, use *_event variants rather than arithmetic in expressions.
+- Map from aircraft docs (L: vars, A: simvars, K: events) to MF expressions, but validate against working examples in Starship.cfg.
+
+Documentation
+- See docs/CFG_Authoring_Guide.md for the full grammar, examples, and troubleshooting.
+
