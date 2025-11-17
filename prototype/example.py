@@ -43,7 +43,7 @@ for i in weights:
 print(f'ZFW: {zfw:.1f} | CG: {cg:.1f} ')
 '''
 
-var = "(L:bksq_AltitudePreselect_1, Feet)"
+var = "(A:EXTERNAL POWER AVAILABLE:1, Bool)"
 
 vr.get(var)
 sleep(0.1) 
@@ -63,7 +63,7 @@ sleep(1)
 # ae.find("COM2_RADIO_SET")(9029)
 # ae.find("COM_RADIO_SET")(9029)
 # ae.find("COM2_RADIO_SET")(9029)
-# vr.set("2200 (>L:bksq_AltitudePreselect_1, Feet)")
+# vr.set("(>K:TOGGLE_EXTERNAL_POWER)")
 # vr.set("3 1013 16 * (>K:2:KOHLSMAN_SET)")
 
 # sleep(0.1)
